@@ -55,8 +55,7 @@ function App() {
         {/* Footer */}
         <footer className="bg-gray-800 text-white p-4 text-center">
           <p>
-            &copy; {new Date().getFullYear()} Tech Innovators Club. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} CSI MIT-WPU. All rights reserved.
           </p>
         </footer>
       </div>

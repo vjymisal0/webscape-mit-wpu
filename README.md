@@ -25,6 +25,16 @@ _so that I can quickly decide whether to join and get involved._
 
 ---
 
+## Important!!!
+
+- **Navbar and Footer:**
+  **Do not change the contents** of the Navbar and Footer sections. You are only allowed to modify their appearance (such as color, font, layout, etc.).
+
+- **Other Sections:**
+  You have **full freedom** to modify any other sections of the website. This includes, but is not limited to, the Hero Section, Features/Highlights, Events, Projects, and any additional content areas. Feel free to adjust the content, layout, styling, and functionality as needed to best showcase your creativity and skills.
+
+---
+
 ## Pages & Incomplete Elements
 
 ### 1. Home Page
