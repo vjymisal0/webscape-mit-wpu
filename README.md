@@ -1,4 +1,4 @@
-# Webscape Challenge (Advance)
+# Webscape Challenge (Advanced)
 
 Welcome to the Tech Innovators Club website challenge! This project aims to create a modern, responsive website that clearly explains the club’s mission, showcases upcoming events, and highlights innovative projects. Your goal is to build an engaging user experience using Tailwind CSS (and React for interactivity where needed).
 
