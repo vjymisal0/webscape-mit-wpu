@@ -103,10 +103,9 @@ const Projects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [showModal, setShowModal] = useState(false);
-  const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [sortBy, setSortBy] = useState('latest');
-  const projectsPerPage = 6;
 
   const categories = ['All', 'Artificial Intelligence', 'Mobile Development', 'Virtual Reality', 'Internet of Things'];
   const sortOptions = [
@@ -119,7 +118,7 @@ const Projects = () => {
     const fetchProjects = async () => {
       setIsLoading(true);
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       let filtered = [...projects].filter(project => {
         const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -141,47 +140,81 @@ const Projects = () => {
         }
       });
 
-      setDisplayedProjects(filtered.slice(0, page * projectsPerPage));
+      setDisplayedProjects(filtered);
       setIsLoading(false);
     };
 
     fetchProjects();
-  }, [searchTerm, activeFilter, page, sortBy]);
+  }, [searchTerm, activeFilter, sortBy]);
 
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+      transition: { duration: 0.4 }
     }
   };
 
-  const cardVariants = {
-    hidden: {
-      y: 20,
-      opacity: 0
-    },
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
     visible: {
-      y: 0,
       opacity: 1,
+      y: 0,
       transition: {
         type: "spring",
         stiffness: 100,
         damping: 15
       }
-    },
-    hover: {
-      y: -10,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 10
-      }
     }
   };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.9,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  const ProjectSkeleton = () => (
+    <div className="bg-white rounded-2xl p-6 shadow-md">
+      <div className="h-48 bg-gray-200 rounded-xl animate-pulse mb-4" />
+      <div className="flex items-center space-x-4 mb-4">
+        <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="flex-1">
+          <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded w-1/4 mt-2 animate-pulse" />
+        </div>
+      </div>
+      <div className="space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse" />
+      </div>
+      <div className="flex flex-wrap gap-2 my-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-6 w-16 bg-gray-200 rounded-full animate-pulse" />
+        ))}
+      </div>
+      <div className="flex justify-between items-center mt-4">
+        <div className="w-24 h-8 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="flex gap-2">
+          <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-16">
@@ -195,13 +228,13 @@ const Projects = () => {
           {/* Header Section */}
           <div className="text-center max-w-4xl mx-auto">
             <motion.h1
-              variants={cardVariants}
+              variants={itemVariants}
               className="text-5xl font-bold text-gray-900 mb-6"
             >
               Our Projects
             </motion.h1>
             <motion.p
-              variants={cardVariants}
+              variants={itemVariants}
               className="text-xl text-gray-600"
             >
               Explore our innovative projects that showcase our technical expertise and creativity
@@ -210,19 +243,24 @@ const Projects = () => {
 
           {/* Search and Filters */}
           <motion.div
-            variants={cardVariants}
+            variants={itemVariants}
             className="max-w-4xl mx-auto space-y-6"
           >
             {/* Search Bar */}
             <div className="relative">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
-              />
+              <div className={`relative transition-all duration-300 ${isSearchFocused ? 'transform -translate-y-1 shadow-lg' : ''
+                }`}>
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
+                />
+              </div>
             </div>
 
             {/* Filters and Sort */}
@@ -232,7 +270,6 @@ const Projects = () => {
                 {categories.map((category) => (
                   <motion.button
                     key={category}
-                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveFilter(category)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${activeFilter === category
@@ -270,35 +307,34 @@ const Projects = () => {
           >
             <AnimatePresence mode="wait">
               {isLoading ? (
-                // Loading Skeleton
-                [...Array(6)].map((_, i) => (
+                // Skeleton Loading
+                [...Array(6)].map((_, index) => (
                   <motion.div
-                    key={`skeleton-${i}`}
-                    variants={cardVariants}
-                    className="bg-white rounded-2xl p-6 shadow-lg animate-pulse"
+                    key={`skeleton-${index}`}
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
                   >
-                    <div className="h-48 bg-gray-200 rounded-xl mb-4"></div>
-                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <ProjectSkeleton />
                   </motion.div>
                 ))
               ) : (
                 displayedProjects.map((project) => (
                   <motion.div
                     key={project.id}
+                    variants={itemVariants}
                     layout
-                    variants={cardVariants}
-                    whileHover="hover"
-                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+                    className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100"
                   >
                     {/* Project Image */}
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-48 overflow-hidden rounded-t-2xl">
                       <img
                         src={project.imageUrl}
                         alt={project.title}
-                        className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-4 right-4 flex items-center gap-2">
+                      <div className="absolute top-4 right-4">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${project.status === 'Completed'
                             ? 'bg-green-100 text-green-600'
                             : 'bg-amber-100 text-amber-600'
@@ -346,9 +382,7 @@ const Projects = () => {
 
                       {/* Actions */}
                       <div className="flex justify-between items-center">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                        <button
                           onClick={() => {
                             setSelectedProject(project);
                             setShowModal(true);
@@ -356,26 +390,24 @@ const Projects = () => {
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300"
                         >
                           View Details
-                        </motion.button>
+                        </button>
                         <div className="flex gap-3">
-                          <motion.a
-                            whileHover={{ scale: 1.1, y: -2 }}
+                          <a
                             href={project.githubUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-600 hover:text-gray-900 transition-colors duration-300"
                           >
                             <FaGithub size={20} />
-                          </motion.a>
-                          <motion.a
-                            whileHover={{ scale: 1.1, y: -2 }}
+                          </a>
+                          <a
                             href={project.demoUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-600 hover:text-gray-900 transition-colors duration-300"
                           >
                             <FaExternalLinkAlt size={20} />
-                          </motion.a>
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -384,23 +416,6 @@ const Projects = () => {
               )}
             </AnimatePresence>
           </motion.div>
-
-          {/* Load More Button */}
-          {!isLoading && displayedProjects.length < projects.length && (
-            <motion.div
-              variants={cardVariants}
-              className="flex justify-center mt-12"
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setPage(prev => prev + 1)}
-                className="px-8 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-300"
-              >
-                Load More Projects
-              </motion.button>
-            </motion.div>
-          )}
         </motion.div>
       </div>
 
@@ -411,13 +426,14 @@ const Projects = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             onClick={() => setShowModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               onClick={e => e.stopPropagation()}
               className="bg-white rounded-2xl max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto relative"
             >

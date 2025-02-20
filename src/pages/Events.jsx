@@ -74,23 +74,34 @@ const events = [
 ];
 
 const Events = () => {
-  const [filteredEvents, setFilteredEvents] = useState(events);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const categories = ['All', 'Workshop', 'Seminar', 'Networking'];
 
   useEffect(() => {
-    const filtered = events.filter(event => {
-      const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = activeFilter === 'All' || event.category === activeFilter;
-      return matchesSearch && matchesCategory;
-    });
-    setFilteredEvents(filtered);
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const filtered = events.filter(event => {
+        const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = activeFilter === 'All' || event.category === activeFilter;
+        return matchesSearch && matchesCategory;
+      });
+
+      setFilteredEvents(filtered);
+      setIsLoading(false);
+    };
+
+    fetchEvents();
   }, [searchTerm, activeFilter]);
 
   const handleEventClick = (event) => {
@@ -103,34 +114,28 @@ const Events = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+      transition: { duration: 0.4 }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
-      y: 0,
       opacity: 1,
+      y: 0,
       transition: {
         type: "spring",
-        stiffness: 100
+        stiffness: 100,
+        damping: 15
       }
     }
   };
 
   const modalVariants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.8,
-      y: -50
-    },
+    hidden: { opacity: 0, scale: 0.9 },
     visible: {
       opacity: 1,
       scale: 1,
-      y: 0,
       transition: {
         type: "spring",
         stiffness: 300,
@@ -139,13 +144,34 @@ const Events = () => {
     },
     exit: {
       opacity: 0,
-      scale: 0.8,
-      y: 50,
-      transition: {
-        duration: 0.2
-      }
+      scale: 0.9,
+      transition: { duration: 0.2 }
     }
   };
+
+  const EventSkeleton = () => (
+    <div className="bg-white rounded-xl p-6 shadow-md">
+      <div className="flex items-center space-x-4 mb-4">
+        <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="flex-1">
+          <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded w-1/4 mt-2 animate-pulse" />
+        </div>
+      </div>
+      <div className="space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse" />
+      </div>
+      <div className="mt-4 space-y-2">
+        <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse" />
+      </div>
+      <div className="mt-6">
+        <div className="h-10 bg-gray-200 rounded animate-pulse" />
+      </div>
+    </div>
+  );
 
   return (
     <div className="events-page bg-gray-50 min-h-screen py-8">
@@ -157,16 +183,16 @@ const Events = () => {
           className="space-y-8"
         >
           <motion.h1
-            className="text-4xl md:text-5xl font-bold text-center mb-8 text-gray-800"
             variants={itemVariants}
+            className="text-4xl md:text-5xl font-bold text-center mb-8 text-gray-800"
           >
             Upcoming Events
           </motion.h1>
 
           {/* Search and Filter Section */}
           <motion.div
-            className="max-w-4xl mx-auto mb-12"
             variants={itemVariants}
+            className="max-w-4xl mx-auto mb-12"
           >
             <div className="relative mb-6">
               <div className={`relative transition-all duration-300 ${isSearchFocused ? 'transform -translate-y-1 shadow-lg' : ''
@@ -188,11 +214,10 @@ const Events = () => {
               {categories.map((category) => (
                 <motion.button
                   key={category}
-                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${activeFilter === category
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
                     }`}
                   onClick={() => setActiveFilter(category)}
                 >
@@ -204,59 +229,73 @@ const Events = () => {
 
           {/* Events Grid */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            <AnimatePresence>
-              {filteredEvents.map((event) => (
-                <motion.div
-                  key={event.id}
-                  layout
-                  variants={itemVariants}
-                  whileHover={{ y: -5 }}
-                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
-                  onClick={() => handleEventClick(event)}
-                >
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center">
-                        <div className="p-3 bg-gray-100 rounded-lg mr-4">
-                          {event.icon}
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                // Skeleton Loading
+                [...Array(6)].map((_, index) => (
+                  <motion.div
+                    key={`skeleton-${index}`}
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                  >
+                    <EventSkeleton />
+                  </motion.div>
+                ))
+              ) : (
+                filteredEvents.map((event) => (
+                  <motion.div
+                    key={event.id}
+                    variants={itemVariants}
+                    layout
+                    className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                    onClick={() => handleEventClick(event)}
+                  >
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center">
+                          <div className="p-3 bg-gray-100 rounded-lg mr-4">
+                            {event.icon}
+                          </div>
+                          <h3 className="text-xl font-semibold text-gray-800">{event.title}</h3>
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-800">{event.title}</h3>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                          {event.category}
+                        </span>
                       </div>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                        {event.category}
-                      </span>
+
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center text-gray-600">
+                          <FaCalendarAlt className="mr-2" />
+                          <span>{format(new Date(event.date), 'MMMM d, yyyy')}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <FaClock className="mr-2" />
+                          <span>{event.time}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <FaMapMarkerAlt className="mr-2" />
+                          <span>{event.location}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <FaUsers className="mr-2" />
+                          <span>Capacity: {event.capacity} people</span>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
+
+                      <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300">
+                        Register Now
+                      </button>
                     </div>
-
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center text-gray-600">
-                        <FaCalendarAlt className="mr-2" />
-                        <span>{format(new Date(event.date), 'MMMM d, yyyy')}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <FaClock className="mr-2" />
-                        <span>{event.time}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <FaMapMarkerAlt className="mr-2" />
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <FaUsers className="mr-2" />
-                        <span>Capacity: {event.capacity} people</span>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
-
-                    <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300 transform hover:scale-[1.02]">
-                      Register Now
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              )}
             </AnimatePresence>
           </motion.div>
         </motion.div>
@@ -344,7 +383,7 @@ const Events = () => {
               </div>
 
               <div className="flex gap-4">
-                <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-[1.02]">
+                <button className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all duration-300">
                   Register Now
                 </button>
                 <button
